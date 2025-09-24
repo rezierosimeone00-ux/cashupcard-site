@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cashup Card — Smart prepaid, geo-segmentata</title>
+  <meta name="description" content="Cashup Card: prepaid intelligente con geo-drops, antifrode e KPI realtime. Beta privata in Ontario.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  
+<header class="header">
+  <div class="container nav">
+    <div class="brand">
+      <img src="assets/favicon.svg" alt="Cashup" width="22" height="22"/>
+      <b>CASHUP CARD</b>
+      <span class="badge">Private beta · Ontario</span>
+    </div>
+    <nav>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#features">Features</a>
+      <a href="contact.html">Contact</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a class="btn" href="index.html#waitlist">Join waitlist</a>
+    </nav>
+  </div>
+</header>
+
+  <main class="container hero">
+    <div class="grid grid-2">
+      <section class="card">
+        <h1>Smart prepaid, geo‑segmentata.</h1>
+        <p>Cashup Card abilita campagne “drop” per area, coorti e merchant verticali. Antifrode integrato e dashboard KPI.</p>
+        <div class="cta">
+          <a class="btn" href="#waitlist">Join waitlist</a>
+          <a class="btn secondary" href="#features">See features</a>
+        </div>
+        <div class="kpi" style="margin-top:14px">
+          <div><b>3</b><br><span class="small">pilot merchants</span></div>
+          <div><b>H3</b><br><span class="small">geo-segmentation</span></div>
+          <div><b>PoC</b><br><span class="small">TRL‑3/4 validated</span></div>
+        </div>
+      </section>
+      <section class="card">
+        <img class="img" src="https://dummyimage.com/1200x700/10121a/9aa3b2.png&text=Cashup+Dashboard+Preview" alt="Dashboard preview">
+        <p class="note">Preview illustrativo della dashboard KPI (coorti, redemption, fraud signals).</p>
+      </section>
+    </div>
+
+    <section id="how" class="card" style="margin-top:18px">
+      <h2>How it works</h2>
+      <div class="grid">
+        <div class="feature"><h3>1) Geo‑drops</h3><p>Configura offerte per celle H3 e segmenti utente. Il motore bandit ottimizza la redemption.</p></div>
+        <div class="feature"><h3>2) Wallet & card</h3><p>Carte virtuali “beta” con regole antifrode e budget per merchant verticale (grocery/pet).</p></div>
+        <div class="feature"><h3>3) KPI realtime</h3><p>Coorti, A/B sulle politiche (ε‑greedy, UCB, Thompson), e controllo qualità antifrode.</p></div>
+      </div>
+    </section>
+
+    <section id="features" class="card">
+      <h2>Features</h2>
+      <table class="table">
+        <tr><th>Area</th><th>Dettagli</th></tr>
+        <tr><td>Geo‑segmentation</td><td>Celle H3, mix dati demografici e merchant density.</td></tr>
+        <tr><td>Bandit engine</td><td>ε‑greedy, UCB, Thompson Sampling, policy switch per coorti.</td></tr>
+        <tr><td>Fraud‑aware</td><td>Regole, frequenza, importi, device signals, velocity checks.</td></tr>
+        <tr><td>Analytics</td><td>Dashboard coorti, funnel, redemption per area, alert.</td></tr>
+      </table>
+    </section>
+
+    <section id="waitlist" class="card">
+      <h2>Join the private beta</h2>
+      <p>Lascia la tua email. Riceverai un invito quando apriamo la beta privata in Ontario.</p>
+      <form id="waitlist_form" class="form">
+        <input id="waitlist_email" class="input" type="email" required placeholder="your@email.com">
+        <button class="btn" type="submit">Join waitlist</button>
+      </form>
+      <p class="note">Per attivare un backend vero (Formspree), apri <code>assets/app.js</code> e imposta <code>USE_FORMSPREE=true</code> + endpoint.</p>
+    </section>
+
+    <section class="card">
+      <h2>FAQ</h2>
+      <div class="list">
+        <div class="feature"><h3>È già live?</h3><p>Stiamo avviando la beta privata con pochi merchant selezionati.</p></div>
+        <div class="feature"><h3>Serve un’app?</h3><p>No per il waitlist. Per la card, inviamo istruzioni via email agli utenti invitati.</p></div>
+        <div class="feature"><h3>Posso usare un dominio mio?</h3><p>Sì, vedi <code>README_DEPLOY.md</code> per GitHub Pages o Netlify con CNAME.</p></div>
+      </div>
+    </section>
+  </main>
+  
+<footer class="footer">
+  <div class="container">
+    © <span id="year"></span> Cashup Card — All rights reserved.
+  </div>
+</footer>
+<script src="assets/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact — Cashup Card</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  
+<header class="header">
+  <div class="container nav">
+    <div class="brand">
+      <img src="assets/favicon.svg" alt="Cashup" width="22" height="22"/>
+      <b>CASHUP CARD</b>
+      <span class="badge">Private beta · Ontario</span>
+    </div>
+    <nav>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#features">Features</a>
+      <a href="contact.html">Contact</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a class="btn" href="index.html#waitlist">Join waitlist</a>
+    </nav>
+  </div>
+</header>
+
+  <main class="container">
+    <section class="card">
+      <h1>Contact</h1>
+      <p>Per partnership e media: <a href="mailto:info@yourdomain.com">info@yourdomain.com</a></p>
+      <p class="note">Se vuoi un form con backend gratuito, abilita Formspree in <code>assets/app.js</code>.</p>
+      <form class="form" onsubmit="window.location.href = `mailto:info@yourdomain.com?subject=Contact&body=${encodeURIComponent(document.getElementById('cmsg').value)}`; return false;">
+        <input class="input" type="email" required placeholder="your@email.com">
+        <input id="csubj" class="input" type="text" placeholder="Subject (optional)">
+        <textarea id="cmsg" class="input" rows="5" placeholder="Your message"></textarea>
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+  
+<footer class="footer">
+  <div class="container">
+    © <span id="year"></span> Cashup Card — All rights reserved.
+  </div>
+</footer>
+<script src="assets/app.js"></script>
+
+</body>
+</html>
