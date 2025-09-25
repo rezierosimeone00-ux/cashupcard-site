@@ -1,253 +1,331 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Cashup Card</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-:root{
-  --bg-0:#13161B; --bg-1:#161B22; --card:#1C222B; --border:#2A313B;
-  --title:#FFFFFF; --text:#E2E6EC; --muted:#9AA5B1;
-  --accent:#00C9A7; --accent-2:#7C8CFF; --accent-bg:linear-gradient(135deg,#00C9A7,#7C8CFF);
-}
-.font-display{font-family:"Space Grotesk",ui-sans-serif,system-ui}
-.font-body{font-family:Inter,ui-sans-serif,system-ui}
-.btn-primary{background:var(--accent-bg);color:#0b0f12;font-weight:600}
-.btn-primary:hover{filter:brightness(1.05)}
-.btn-secondary{border:1px solid var(--accent-2);color:#fff}
-.btn-secondary:hover{background:rgba(124,140,255,.12)}
-.glass{background:rgba(255,255,255,.03);border:1px solid var(--border)}
-@supports(backdrop-filter:blur(8px)){.glass{backdrop-filter:blur(8px)}}
-.timebox{min-height:84px} /* allineamento tasselli counter */
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Cashup Card</title>
+  <meta name="description" content="Instant-uplift virtual prepaid cards for GTA (Toronto)."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* piccoli fix per bordi e sfocature su mobile */
+    @supports (backdrop-filter: blur(8px)) {
+      .glass { backdrop-filter: blur(8px); }
+    }
+    .glass { background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+  </style>
 </head>
 <body>
-<div id="root"></div>
+  <div id="root"></div>
 
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- React 18 + Babel Standalone (compila JSX nel browser: perfetto per GitHub Pages) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-<script type="text/babel">
-const LAUNCH_ISO="2026-08-31T00:00:00-04:00";
-const CA_POSTAL=/^[ABCEGHJ-NPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z][\\s-]?\\d[ABCEGHJ-NPRSTV-Z]\\d$/i;
-const GTA_FSA=/^(M\\d|L[01345679])/i;
-const isGTA=(pc)=>{const s=String(pc||"").trim().toUpperCase();return CA_POSTAL.test(s)&&GTA_FSA.test(s);};
+  <script type="text/babel">
+    // ========= Config =========
+    const LAUNCH_ISO = "2026-08-31T00:00:00-04:00"; // Fixed launch date
 
-function useCountdown(tg){
-  const [now,setNow]=React.useState(()=>new Date());
-  React.useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id);},[]);
-  const d=Math.max(0,tg.getTime()-now.getTime());
-  const s=Math.floor(d/1000);
-  return {
-    days:Math.floor(s/86400),
-    hours:Math.floor((s%86400)/3600),
-    minutes:Math.floor((s%3600)/60),
-    seconds:s%60
-  };
-}
+    // Canada postal code + coarse GTA filter
+    const CA_POSTAL = /^[ABCEGHJ-NPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z][\\s-]?\\d[ABCEGHJ-NPRSTV-Z]\\d$/i;
+    const GTA_FSA = /^(M\\d|L[01345679])/i; // Toronto "M*" + common GTA "L*" prefixes
+    const isGTA = (pc) => {
+      const s = String(pc || "").trim().toUpperCase();
+      return CA_POSTAL.test(s) && GTA_FSA.test(s);
+    };
 
-const Button=({className="",children,...p})=>(<button className={"inline-flex items-center justify-center rounded-xl px-4 h-11 text-sm font-medium transition "+className}{...p}>{children}</button>);
-const Input =({className="",...p})=>(<input className={"w-full rounded-md border px-3 h-11 outline-none "+className}{...p}/>);
-const Label =({htmlFor,children,className="",style})=>(<label htmlFor={htmlFor} className={"text-sm "+className} style={style}>{children}</label>);
-const Checkbox=({id,className="",...p})=>(<input id={id} type="checkbox" className={"h-4 w-4 "+className}{...p}/>);
-const Card   =({className="",style={},children})=>(<div className={"rounded-2xl border "+className} style={style}>{children}</div>);
-const CardContent=({className="",children})=>(<div className={className}>{children}</div>);
+    // ========= Hooks =========
+    function useCountdown(target) {
+      const [now, setNow] = React.useState(() => new Date());
+      React.useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
+      const diff = Math.max(0, target.getTime() - now.getTime());
+      const totalSeconds = Math.floor(diff / 1000);
+      const days = Math.floor(totalSeconds / (3600 * 24));
+      const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return { days, hours, minutes, seconds };
+    }
 
-const Field=({id,label,placeholder,type="text",options,value,onChange,onBlur,hint})=>(
-  <div className="grid gap-2">
-    <Label htmlFor={id} className="font-medium" style={{color:"var(--title)"}}>{label}</Label>
-    {options?(
-      <select id={id} value={value} onChange={onChange} onBlur={onBlur}
-        className="h-11 rounded-md border px-3 bg-transparent"
-        style={{color:"var(--text)",borderColor:"var(--border)"}}>
-        {options.map(o=><option key={o} value={o}>{o}</option>)}
-      </select>
-    ):(
-      <Input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} onBlur={onBlur}
-        className="bg-transparent" style={{color:"var(--text)",borderColor:"var(--border)"}}/>
-    )}
-    {hint&&<span className="text-xs" style={{color:"var(--muted)"}}>{hint}</span>}
-  </div>
-);
+    // ========= Minimal UI primitives (self-contained) =========
+    const Button = ({ className = "", children, ...props }) => (
+      <button
+        className={"inline-flex items-center justify-center rounded-xl px-4 h-11 text-sm font-medium transition " + className}
+        {...props}
+      >{children}</button>
+    );
 
-const TimeBox=({label,value})=>(
-  <div className="timebox flex flex-col items-center justify-center rounded-2xl p-4 text-white" style={{background:"var(--accent-bg)"}}>
-    <div className="text-3xl md:text-4xl font-bold tabular-nums leading-none">{String(value).padStart(2,"0")}</div>
-    <div className="text-[11px] uppercase tracking-wider mt-1 opacity-90">{label}</div>
-  </div>
-);
+    const Input = ({ className = "", ...props }) => (
+      <input className={"w-full rounded-md border px-3 h-11 outline-none " + className} {...props} />
+    );
 
-const InfoCard=({title,text,badge,accent="var(--accent)"})=>(
-  <Card className="glass" style={{borderColor:accent,boxShadow:"0 10px 28px rgba(0,0,0,.28)"}}>
-    <CardContent className="p-6 space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{background:accent}}/>
-        <h4 className="text-lg font-semibold font-display" style={{color:"var(--title)",letterSpacing:"-0.01em"}}>{title}</h4>
+    const Label = ({ htmlFor, children, className = "", style }) => (
+      <label htmlFor={htmlFor} className={"text-sm " + className} style={style}>{children}</label>
+    );
+
+    const Checkbox = ({ id, className = "", ...props }) => (
+      <input id={id} type="checkbox" className={"h-4 w-4 " + className} {...props} />
+    );
+
+    const Card = ({ className = "", style = {}, children }) => (
+      <div className={"rounded-2xl border " + className} style={style}>{children}</div>
+    );
+
+    const CardContent = ({ className = "", children }) => (
+      <div className={className}>{children}</div>
+    );
+
+    // ========= Small atoms =========
+    const Field = ({ id, label, placeholder, type = "text", options, value, onChange, onBlur, hint }) => (
+      <div className="grid gap-2">
+        <Label htmlFor={id} className="font-medium" style={{ color: "var(--title)" }}>{label}</Label>
+        {options ? (
+          <select id={id} value={value} onChange={onChange} onBlur={onBlur}
+            className="h-11 rounded-md border px-3 bg-transparent"
+            style={{ color: "var(--text)", borderColor: "var(--border)" }}>
+            {options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        ) : (
+          <Input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} onBlur={onBlur}
+            className="bg-transparent" style={{ color: "var(--text)", borderColor: "var(--border)" }} />
+        )}
+        {hint && <span className="text-xs" style={{ color: "var(--muted)" }}>{hint}</span>}
       </div>
-      {badge&&<div className="text-[11px] uppercase tracking-wider" style={{color:"var(--muted)"}}>{badge}</div>}
-      <p style={{color:"var(--text)"}}>{text}</p>
-    </CardContent>
-  </Card>
-);
+    );
 
-function CashupSite(){
-  const targetDate=React.useMemo(()=>new Date(LAUNCH_ISO),[]);
-  const {days,hours,minutes,seconds}=useCountdown(targetDate);
+    const TimeBox = ({ label, value }) => (
+      <div className="rounded-2xl p-4 text-white" style={{ background: "var(--accent-bg)" }}>
+        <div className="text-3xl md:text-4xl font-bold tabular-nums leading-none">{String(value).padStart(2, "0")}</div>
+        <div className="text-[11px] uppercase tracking-wider mt-1 opacity-90">{label}</div>
+      </div>
+    );
 
-  const [userZip,setUserZip]=React.useState("");
-  const [zipHint,setZipHint]=React.useState("Example: M5H 2N2");
-  const [zipOk,setZipOk]=React.useState(null);
-
-  const onZipBlur=()=>{
-    if(!userZip){setZipOk(null);setZipHint("Example: M5H 2N2");return;}
-    const ok=isGTA(userZip); setZipOk(ok);
-    setZipHint(ok?"Looks good — GTA detected":"Not in GTA — try again");
-  };
-
-  const scrollTo=(id)=>{const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:"smooth",block:"start"});};
-
-  return (
-    <div className="min-h-screen w-full font-body" style={{background:"var(--bg-0)",color:"var(--text)"}}>
-      {/* NAV: menu destro rimosso */}
-      <header className="w-full sticky top-0 z-10" style={{borderBottom:"1px solid var(--border)",background:"rgba(19,22,27,0.8)",backdropFilter:"blur(10px)"}}>
-        <div className="mx-auto max-w-6xl px-4 md:px-6 py-3 flex items-center justify-between">
+    const InfoCard = ({ title, text, badge, accent = "var(--accent)" }) => (
+      <Card className="glass" style={{ borderColor: accent, boxShadow: "0 10px 28px rgba(0,0,0,0.28)" }}>
+        <CardContent className="p-6 space-y-3">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl" style={{background:"var(--accent-bg)"}} />
-            <span className="text-lg font-semibold font-display" style={{color:"var(--title)"}}>Cashup Card</span>
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: accent }} />
+            <h4 className="text-lg font-semibold font-display" style={{ color: "var(--title)", letterSpacing: "-0.01em" }}>{title}</h4>
           </div>
-          <div></div>
-        </div>
-      </header>
+          {badge && <div className="text-[11px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>{badge}</div>}
+          <p style={{ color: "var(--text)" }}>{text}</p>
+        </CardContent>
+      </Card>
+    );
 
-      {/* HERO: una riga su mobile */}
-      <section className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-6">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6 text-center lg:text-left">
-            <h1 className="font-display font-bold leading-tight whitespace-nowrap text-[5.8vw] sm:text-[32px] md:text-5xl" style={{color:"var(--title)",letterSpacing:"-0.01em"}}>
-              Imagine loading $80 and instantly seeing $100.
-            </h1>
-            <p className="text-[16px] md:text-lg leading-relaxed max-w-[58ch] mx-auto lg:mx-0">
-              Instant-uplift virtual prepaid cards. No coupons. No waiting — <span style={{color:"#fff"}}>real value at checkout</span>, usable immediately.
-            </p>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-              <Button onClick={()=>scrollTo("join")} className="btn-primary">Users – Join the Pilot</Button>
-              <Button onClick={()=>scrollTo("apply")} className="btn-secondary">Business – Apply</Button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center text-sm justify-center lg:justify-start" style={{color:"var(--muted)"}}>
-              <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{background:"var(--accent)"}}/> <span>Launch date fixed: 31 Aug 2026 (America/Toronto)</span></div>
-              <span className="hidden sm:block">•</span>
-              <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{background:"var(--accent-2)"}}/> <span>Limited per Drop in your area</span></div>
-            </div>
-          </div>
+    // ========= Page =========
+    function CashupSite(){
+      const targetDate = React.useMemo(() => new Date(LAUNCH_ISO), []);
+      const { days, hours, minutes, seconds } = useCountdown(targetDate);
 
-          {/* COUNTDOWN: tasselli allineati */}
-          <div id="countdown">
-            <Card className="glass" style={{boxShadow:"0 14px 40px rgba(0,0,0,.4)"}}>
-              <CardContent className="p-6">
-                <p className="uppercase text-xs tracking-wider mb-2" style={{color:"var(--muted)"}}>Launch countdown</p>
-                <div className="grid grid-cols-4 gap-3 text-center items-stretch">
-                  <TimeBox label="Days" value={days}/>
-                  <TimeBox label="Hours" value={hours}/>
-                  <TimeBox label="Minutes" value={minutes}/>
-                  <TimeBox label="Seconds" value={seconds}/>
+      const [userZip, setUserZip] = React.useState("");
+      const [zipHint, setZipHint] = React.useState("Example: M5H 2N2");
+      const [zipOk, setZipOk] = React.useState(null);
+
+      const onZipBlur = () => {
+        if (!userZip) { setZipOk(null); setZipHint("Example: M5H 2N2"); return; }
+        const ok = isGTA(userZip);
+        setZipOk(ok);
+        setZipHint(ok ? "Looks good — GTA detected" : "Not in GTA — try again");
+      };
+
+      const scrollTo = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+
+      return (
+        <>
+          {/* THEME (dark-but-welcoming) */}
+          <style>{`
+            :root{
+              --bg-0:#13161B;  /* deep charcoal */
+              --bg-1:#161B22;  /* section alt */
+              --card:#1C222B;  /* card surface */
+              --border:#2A313B;
+              --title:#FFFFFF;
+              --text:#E2E6EC;
+              --muted:#9AA5B1;
+              --accent:#00C9A7; /* teal */
+              --accent-2:#7C8CFF; /* indigo */
+              --accent-bg:linear-gradient(135deg,#00C9A7,#7C8CFF); /* vibrant */
+            }
+            .font-display{ font-family: "Space Grotesk", ui-sans-serif, system-ui; }
+            .font-body{ font-family: Inter, ui-sans-serif, system-ui; }
+            .btn-primary{ background: var(--accent-bg); color:#0b0f12; font-weight:600 }
+            .btn-primary:hover{ filter: brightness(1.05) }
+            .btn-secondary{ border:1px solid var(--accent-2); color:#fff }
+            .btn-secondary:hover{ background: rgba(124,140,255,0.12) }
+          `}</style>
+
+          <div className="min-h-screen w-full font-body" style={{ background: "var(--bg-0)", color: "var(--text)" }}>
+            {/* NAV */}
+            <header className="w-full sticky top-0 z-10" style={{ borderBottom: "1px solid var(--border)", background: "rgba(19,22,27,0.8)", backdropFilter: "blur(10px)" }}>
+              <div className="mx-auto max-w-6xl px-4 md:px-6 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl" style={{ background: "var(--accent-bg)" }} />
+                  <span className="text-lg font-semibold font-display" style={{ color: "var(--title)" }}>Cashup Card</span>
                 </div>
-                <p className="text-xs mt-3" style={{color:"var(--muted)"}}>Target date: 31 Aug 2026</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* FORMS: stessa altezza + CTA in basso */}
-      <section id="join" className="mx-auto max-w-6xl px-4 md:px-6 py-10" style={{background:"var(--bg-1)"}}>
-        <div className="grid md:grid-cols-2 gap-8 items-stretch">
-          <Card className="glass h-full">
-            <CardContent className="p-6 space-y-4 flex flex-col h-full">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="h-2.5 w-2.5 rounded-full" style={{background:"var(--accent)"}}/>
-                <p className="uppercase text-xs tracking-wider" style={{color:"var(--muted)"}}>Users</p>
+                <nav className="hidden md:flex items-center gap-6 text-sm" style={{ color: "var(--muted)" }}>
+                  <button onClick={() => scrollTo("countdown")} className="hover:underline">Countdown</button>
+                  <button onClick={() => scrollTo("join")} className="hover:underline">Join Pilot</button>
+                  <button onClick={() => scrollTo("apply")} className="hover:underline">Apply</button>
+                  <button onClick={() => scrollTo("how")} className="hover:underline">How it works</button>
+                </nav>
               </div>
-              <h2 className="text-xl font-semibold font-display" style={{color:"var(--title)"}}>Join the Pilot</h2>
-              <Field id="user-email" label="Email" type="email" placeholder="you@example.com"/>
-              <Field id="user-area" label="Area" options={["Toronto","Mississauga","Brampton","Vaughan","Markham","Scarborough","Richmond Hill","Pickering"]}/>
-              <Field id="user-zip" label="Postal Code (GTA only)" placeholder="M5H 2N2"
-                     value={userZip} onChange={e=>setUserZip(e.target.value)} onBlur={onZipBlur}
-                     hint={zipOk===null?zipHint:zipHint}/>
-              <Field id="user-pref" label="Preference" options={["Grocery","Pet","Both"]}/>
-              <div className="flex items-center gap-2"><Checkbox id="user-terms"/><Label htmlFor="user-terms">Accept Terms & Privacy Policy</Label></div>
-              <Button className="btn-primary w-full mt-auto">Welcome aboard 🎉</Button>
-            </CardContent>
-          </Card>
+            </header>
 
-          <Card id="apply" className="glass h-full">
-            <CardContent className="p-6 space-y-4 flex flex-col h-full">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="h-2.5 w-2.5 rounded-full" style={{background:"var(--accent-2)"}}/>
-                <p className="uppercase text-xs tracking-wider" style={{color:"var(--muted)"}}>Business</p>
+            {/* HERO */}
+            <section className="mx-auto max-w-6xl px-4 md:px-6 pt-12 pb-8">
+              <div className="grid lg:grid-cols-2 gap-10 items-center">
+                <div className="space-y-6">
+                  <h1 className="text-4xl md:text-5xl font-bold leading-tight font-display" style={{ color: "var(--title)", letterSpacing: "-0.01em" }}>Imagine loading $80 and instantly seeing $100.</h1>
+                  <p className="text-[17px] md:text-lg leading-relaxed max-w-[58ch]">Instant-uplift virtual prepaid cards. No coupons. No waiting — <span style={{ color: "#fff" }}>real value at checkout</span>, usable immediately.</p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button onClick={() => scrollTo("join")} className="btn-primary">Users – Join the Pilot</Button>
+                    <Button onClick={() => scrollTo("apply")} className="btn-secondary">Business – Apply</Button>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center text-sm" style={{ color: "var(--muted)" }}>
+                    <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{background:"var(--accent)"}}/> <span>Launch date fixed: 31 Aug 2026 (America/Toronto)</span></div>
+                    <span className="hidden sm:block">•</span>
+                    <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{background:"var(--accent-2)"}}/> <span>Limited per Drop in your area</span></div>
+                  </div>
+                </div>
+
+                {/* COUNTDOWN */}
+                <div id="countdown">
+                  <Card className="glass" style={{ boxShadow: "0 14px 40px rgba(0,0,0,0.4)" }}>
+                    <CardContent className="p-6">
+                      <p className="uppercase text-xs tracking-wider mb-2" style={{ color: "var(--muted)" }}>Launch countdown</p>
+                      <div className="grid grid-cols-4 gap-3 text-center">
+                        <TimeBox label="Days" value={days} />
+                        <TimeBox label="Hours" value={hours} />
+                        <TimeBox label="Minutes" value={minutes} />
+                        <TimeBox label="Seconds" value={seconds} />
+                      </div>
+                      <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>Target date: 31 Aug 2026</p>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-              <h2 className="text-xl font-semibold font-display" style={{color:"var(--title)"}}>Apply as a Merchant</h2>
-              <Field id="biz-legal" label="Business legal name" placeholder="Your Legal Name Inc."/>
-              <Field id="biz-cat" label="Category" options={["Grocery","Pet","Both"]}/>
-              <Field id="biz-locs" label="# Stores" options={["1","2–3","4–9","10+"]}/>
-              <Field id="biz-hq" label="Head office city" options={["Toronto","Mississauga","Brampton","Vaughan","Markham","Other (GTA)"]}/>
-              <Field id="biz-site" label="Website or social link" type="url" placeholder="https://..."/>
-              <Field id="biz-email" label="Work email" type="email" placeholder="owner@store.com"/>
-              <Field id="biz-golive" label="Desired go-live timeframe" options={["30 days","60 days","90 days"]}/>
-              <div className="flex items-center gap-2"><Checkbox id="biz-terms"/><Label htmlFor="biz-terms">Accept Terms & Privacy Policy</Label></div>
-              <Button className="btn-secondary w-full mt-auto">Submit • Under review ✅</Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+            </section>
 
-      {/* FEATURES */}
-      <section id="how" className="mx-auto max-w-6xl px-4 md:px-6 pb-16" style={{background:"var(--bg-1)"}}>
-        <div className="space-y-4 pt-8">
-          <h4 className="text-sm uppercase tracking-wider font-medium" style={{color:"var(--muted)"}}>Value</h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <InfoCard title="Instant Uplift Cards" badge="Scarcity per cluster" text="Unlock extra value via geo-segmented Drops or QR at participating locations." accent="var(--accent)"/>
-            <InfoCard title="Real-Time Checkout Value" text="Balance reflects the bonus the moment you pay; spend fractionally within category." accent="var(--accent-2)"/>
-          </div>
-        </div>
-        <div className="space-y-4 pt-10">
-          <h4 className="text-sm uppercase tracking-wider font-medium" style={{color:"var(--muted)"}}>Platform</h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <InfoCard title="AI-Powered Platform" text="Automation engine, fraud detection, live analytics, modular architecture ready to scale." accent="var(--accent-2)"/>
-            <InfoCard title="Merchant Friendly" badge="No upfront ads" text="Commission only on added value; easy API integration; steady, predictable traffic." accent="var(--accent)"/>
-          </div>
-        </div>
-        <div className="space-y-4 pt-10">
-          <h4 className="text-sm uppercase tracking-wider font-medium" style={{color:"var(--muted)"}}>Growth</h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <InfoCard title="Local Growth Engine" text="Every card strengthens participation; value stays local and builds loyalty." accent="var(--accent)"/>
-            <InfoCard title="Future Vision" text="Pilot on essentials first; expand categories/regions with the same AI infrastructure." accent="var(--accent-2)"/>
-          </div>
-        </div>
-      </section>
+            {/* FORMS */}
+            <section id="join" className="mx-auto max-w-6xl px-4 md:px-6 py-10" style={{ background: "var(--bg-1)" }}>
+              <div className="grid md:grid-cols-2 gap-8 items-stretch">
+                {/* USERS */}
+                <Card className="glass">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--accent)" }} />
+                      <p className="uppercase text-xs tracking-wider" style={{ color: "var(--muted)" }}>Users</p>
+                    </div>
+                    <h2 className="text-xl font-semibold font-display" style={{ color: "var(--title)" }}>Join the Pilot</h2>
+                    <Field id="user-email" label="Email" type="email" placeholder="you@example.com" />
+                    <Field id="user-area" label="Area" options={["Toronto","Mississauga","Brampton","Vaughan","Markham","Scarborough","Richmond Hill","Pickering"]} />
+                    <Field id="user-zip" label="Postal Code (GTA only)" placeholder="M5H 2N2"
+                      value={userZip} onChange={(e)=>setUserZip(e.target.value)} onBlur={onZipBlur} hint={zipOk===null?zipHint:zipHint} />
+                    <Field id="user-pref" label="Preference" options={["Grocery","Pet","Both"]} />
+                    <div className="flex items-center gap-2"><Checkbox id="user-terms" /><Label htmlFor="user-terms">Accept Terms & Privacy Policy</Label></div>
+                    <Button className="btn-primary w-full">Welcome aboard 🎉</Button>
+                  </CardContent>
+                </Card>
 
-      <footer style={{borderTop:"1px solid var(--border)"}}>
-        <div className="mx-auto max-w-6xl px-4 md:px-6 py-8 text-sm" style={{color:"var(--muted)"}}>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            <span>© {new Date().getFullYear()} Cashup Card — Build UX-FIX</span>
-            <div className="flex items-center gap-4">
-              <a className="hover:underline" href="#">Privacy</a>
-              <a className="hover:underline" href="#">Terms</a>
-              <a className="hover:underline" href="#">Contact</a>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+                {/* MERCHANTS */}
+                <Card id="apply" className="glass">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--accent-2)" }} />
+                      <p className="uppercase text-xs tracking-wider" style={{ color: "var(--muted)" }}>Business</p>
+                    </div>
+                    <h2 className="text-xl font-semibold font-display" style={{ color: "var(--title)" }}>Apply as a Merchant</h2>
+                    <Field id="biz-legal" label="Business legal name" placeholder="Your Legal Name Inc." />
+                    <Field id="biz-cat" label="Category" options={["Grocery","Pet","Both"]} />
+                    <Field id="biz-locs" label="# Stores" options={["1","2–3","4–9","10+"]} />
+                    <Field id="biz-hq" label="Head office city" options={["Toronto","Mississauga","Brampton","Vaughan","Markham","Other (GTA)"]} />
+                    <Field id="biz-site" label="Website or social link" type="url" placeholder="https://..." />
+                    <Field id="biz-email" label="Work email" type="email" placeholder="owner@store.com" />
+                    <Field id="biz-golive" label="Desired go-live timeframe" options={["30 days","60 days","90 days"]} />
+                    <div className="flex items-center gap-2"><Checkbox id="biz-terms" /><Label htmlFor="biz-terms">Accept Terms & Privacy Policy</Label></div>
+                    <Button className="btn-secondary w-full">Submit • Under review ✅</Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </section>
 
-const root=ReactDOM.createRoot(document.getElementById('root'));
-root.render(<CashupSite/>);
-</script>
+            {/* TESTIMONIALS */}
+            <section className="mx-auto max-w-6xl px-4 md:px-6 py-12">
+              <h3 className="text-2xl font-semibold mb-6 font-display" style={{ color: "var(--title)" }}>User Reactions</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                {[
+                  "It feels like free money, but real. — Alex",
+                  "Finally something that rewards me instantly, not weeks later. — Daniel",
+                  "This could actually help me save on groceries. — Priya",
+                  "I never trust coupons, but this is different. — Sofia",
+                  "It’s simple — I don’t have to change how I pay. — Liam",
+                  "I’d actually switch my usual payment app for this. — Maria",
+                  "If pet stores accept it, I’m in. — Kevin",
+                  "It makes my budget feel bigger without extra effort. — Emma",
+                ].map((q, i) => {
+                  const [quote, who] = q.split(" — ");
+                  return (
+                    <Card key={i} className="glass">
+                      <CardContent className="p-5"><p>“{quote}” <span style={{ color: "var(--accent-2)" }}>— {who}</span></p></CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* FEATURES: 2 cards x 3 series */}
+            <section id="how" className="mx-auto max-w-6xl px-4 md:px-6 pb-16" style={{ background: "var(--bg-1)" }}>
+              {/* Serie 1: Value */}
+              <div className="space-y-4 pt-8">
+                <h4 className="text-sm uppercase tracking-wider font-medium" style={{ color: "var(--muted)" }}>Value</h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <InfoCard title="Instant Uplift Cards" badge="Scarcity per cluster" text="Unlock extra value via geo-segmented Drops or QR at participating locations." accent="var(--accent)" />
+                  <InfoCard title="Real-Time Checkout Value" text="Balance reflects the bonus the moment you pay; spend fractionally within category." accent="var(--accent-2)" />
+                </div>
+              </div>
+              {/* Serie 2: Platform */}
+              <div className="space-y-4 pt-10">
+                <h4 className="text-sm uppercase tracking-wider font-medium" style={{ color: "var(--muted)" }}>Platform</h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <InfoCard title="AI-Powered Platform" text="Automation engine, fraud detection, live analytics, modular architecture ready to scale." accent="var(--accent-2)" />
+                  <InfoCard title="Merchant Friendly" badge="No upfront ads" text="Commission only on added value; easy API integration; steady, predictable traffic." accent="var(--accent)" />
+                </div>
+              </div>
+              {/* Serie 3: Growth */}
+              <div className="space-y-4 pt-10">
+                <h4 className="text-sm uppercase tracking-wider font-medium" style={{ color: "var(--muted)" }}>Growth</h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <InfoCard title="Local Growth Engine" text="Every card strengthens participation; value stays local and builds loyalty." accent="var(--accent)" />
+                  <InfoCard title="Future Vision" text="Pilot on essentials first; expand categories/regions with the same AI infrastructure." accent="var(--accent-2)" />
+                </div>
+              </div>
+            </section>
+
+            {/* FOOTER */}
+            <footer style={{ borderTop: "1px solid var(--border)" }}>
+              <div className="mx-auto max-w-6xl px-4 md:px-6 py-8 text-sm" style={{ color: "var(--muted)" }}>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                  <span>© ${new Date().getFullYear()} Cashup Card</span>
+                  <div className="flex items-center gap-4">
+                    <a className="hover:underline" href="#">Privacy</a>
+                    <a className="hover:underline" href="#">Terms</a>
+                    <a className="hover:underline" href="#">Contact</a>
+                  </div>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </>
+      );
+    }
+
+    // Mount
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<CashupSite />);
+  </script>
 </body>
 </html>
