@@ -4,34 +4,42 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Cashup Card</title>
-  <meta name="description" content="Instant-uplift virtual prepaid cards for GTA (Toronto)."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* piccoli fix per bordi e sfocature su mobile */
-    @supports (backdrop-filter: blur(8px)) {
-      .glass { backdrop-filter: blur(8px); }
+    :root{
+      --bg-0:#13161B; --bg-1:#161B22; --card:#1C222B; --border:#2A313B;
+      --title:#FFFFFF; --text:#E2E6EC; --muted:#9AA5B1;
+      --accent:#00C9A7; --accent-2:#7C8CFF; --accent-bg:linear-gradient(135deg,#00C9A7,#7C8CFF);
     }
-    .glass { background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+    .font-display{ font-family: "Space Grotesk", ui-sans-serif, system-ui; }
+    .font-body{ font-family: Inter, ui-sans-serif, system-ui; }
+    .btn-primary{ background: var(--accent-bg); color:#0b0f12; font-weight:600 }
+    .btn-primary:hover{ filter: brightness(1.05) }
+    .btn-secondary{ border:1px solid var(--accent-2); color:#fff }
+    .btn-secondary:hover{ background: rgba(124,140,255,0.12) }
+    .glass{ backdrop-filter: blur(8px); background: rgba(255,255,255,0.03); border:1px solid var(--border); }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
-  <!-- React 18 + Babel Standalone (compila JSX nel browser: perfetto per GitHub Pages) -->
+  <!-- React 18 + Babel (JSX compilato nel browser) -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <script type="text/babel">
+    import React, { useEffect, useMemo, useState } from "react";
+
     // ========= Config =========
     const LAUNCH_ISO = "2026-08-31T00:00:00-04:00"; // Fixed launch date
 
     // Canada postal code + coarse GTA filter
-    const CA_POSTAL = /^[ABCEGHJ-NPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z][\\s-]?\\d[ABCEGHJ-NPRSTV-Z]\\d$/i;
-    const GTA_FSA = /^(M\\d|L[01345679])/i; // Toronto "M*" + common GTA "L*" prefixes
+    const CA_POSTAL = /^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][\s-]?\d[ABCEGHJ-NPRSTV-Z]\d$/i;
+    const GTA_FSA = /^(M\d|L[01345679])/i; // Toronto "M*" + common GTA "L*" prefixes
     const isGTA = (pc) => {
       const s = String(pc || "").trim().toUpperCase();
       return CA_POSTAL.test(s) && GTA_FSA.test(s);
@@ -39,8 +47,8 @@
 
     // ========= Hooks =========
     function useCountdown(target) {
-      const [now, setNow] = React.useState(() => new Date());
-      React.useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
+      const [now, setNow] = useState(() => new Date());
+      useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
       const diff = Math.max(0, target.getTime() - now.getTime());
       const totalSeconds = Math.floor(diff / 1000);
       const days = Math.floor(totalSeconds / (3600 * 24));
@@ -53,25 +61,25 @@
     // ========= Minimal UI primitives (self-contained) =========
     const Button = ({ className = "", children, ...props }) => (
       <button
-        className={"inline-flex items-center justify-center rounded-xl px-4 h-11 text-sm font-medium transition " + className}
+        className={`inline-flex items-center justify-center rounded-xl px-4 h-11 text-sm font-medium transition ${className}`}
         {...props}
       >{children}</button>
     );
 
     const Input = ({ className = "", ...props }) => (
-      <input className={"w-full rounded-md border px-3 h-11 outline-none " + className} {...props} />
+      <input className={`w-full rounded-md border px-3 h-11 outline-none ${className}`} {...props} />
     );
 
-    const Label = ({ htmlFor, children, className = "", style }) => (
-      <label htmlFor={htmlFor} className={"text-sm " + className} style={style}>{children}</label>
+    const Label = ({ htmlFor, children, className = "" }) => (
+      <label htmlFor={htmlFor} className={`text-sm ${className}`}>{children}</label>
     );
 
     const Checkbox = ({ id, className = "", ...props }) => (
-      <input id={id} type="checkbox" className={"h-4 w-4 " + className} {...props} />
+      <input id={id} type="checkbox" className={`h-4 w-4 ${className}`} {...props} />
     );
 
     const Card = ({ className = "", style = {}, children }) => (
-      <div className={"rounded-2xl border " + className} style={style}>{children}</div>
+      <div className={`rounded-2xl border ${className}`} style={style}>{children}</div>
     );
 
     const CardContent = ({ className = "", children }) => (
@@ -118,12 +126,12 @@
 
     // ========= Page =========
     function CashupSite(){
-      const targetDate = React.useMemo(() => new Date(LAUNCH_ISO), []);
+      const targetDate = useMemo(() => new Date(LAUNCH_ISO), []);
       const { days, hours, minutes, seconds } = useCountdown(targetDate);
 
-      const [userZip, setUserZip] = React.useState("");
-      const [zipHint, setZipHint] = React.useState("Example: M5H 2N2");
-      const [zipOk, setZipOk] = React.useState(null);
+      const [userZip, setUserZip] = useState("");
+      const [zipHint, setZipHint] = useState("Example: M5H 2N2");
+      const [zipOk, setZipOk] = useState(null);
 
       const onZipBlur = () => {
         if (!userZip) { setZipOk(null); setZipHint("Example: M5H 2N2"); return; }
@@ -136,28 +144,6 @@
 
       return (
         <>
-          {/* THEME (dark-but-welcoming) */}
-          <style>{`
-            :root{
-              --bg-0:#13161B;  /* deep charcoal */
-              --bg-1:#161B22;  /* section alt */
-              --card:#1C222B;  /* card surface */
-              --border:#2A313B;
-              --title:#FFFFFF;
-              --text:#E2E6EC;
-              --muted:#9AA5B1;
-              --accent:#00C9A7; /* teal */
-              --accent-2:#7C8CFF; /* indigo */
-              --accent-bg:linear-gradient(135deg,#00C9A7,#7C8CFF); /* vibrant */
-            }
-            .font-display{ font-family: "Space Grotesk", ui-sans-serif, system-ui; }
-            .font-body{ font-family: Inter, ui-sans-serif, system-ui; }
-            .btn-primary{ background: var(--accent-bg); color:#0b0f12; font-weight:600 }
-            .btn-primary:hover{ filter: brightness(1.05) }
-            .btn-secondary{ border:1px solid var(--accent-2); color:#fff }
-            .btn-secondary:hover{ background: rgba(124,140,255,0.12) }
-          `}</style>
-
           <div className="min-h-screen w-full font-body" style={{ background: "var(--bg-0)", color: "var(--text)" }}>
             {/* NAV */}
             <header className="w-full sticky top-0 z-10" style={{ borderBottom: "1px solid var(--border)", background: "rgba(19,22,27,0.8)", backdropFilter: "blur(10px)" }}>
@@ -277,9 +263,8 @@
               </div>
             </section>
 
-            {/* FEATURES: 2 cards x 3 series */}
+            {/* FEATURES */}
             <section id="how" className="mx-auto max-w-6xl px-4 md:px-6 pb-16" style={{ background: "var(--bg-1)" }}>
-              {/* Serie 1: Value */}
               <div className="space-y-4 pt-8">
                 <h4 className="text-sm uppercase tracking-wider font-medium" style={{ color: "var(--muted)" }}>Value</h4>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -287,7 +272,6 @@
                   <InfoCard title="Real-Time Checkout Value" text="Balance reflects the bonus the moment you pay; spend fractionally within category." accent="var(--accent-2)" />
                 </div>
               </div>
-              {/* Serie 2: Platform */}
               <div className="space-y-4 pt-10">
                 <h4 className="text-sm uppercase tracking-wider font-medium" style={{ color: "var(--muted)" }}>Platform</h4>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -295,7 +279,6 @@
                   <InfoCard title="Merchant Friendly" badge="No upfront ads" text="Commission only on added value; easy API integration; steady, predictable traffic." accent="var(--accent)" />
                 </div>
               </div>
-              {/* Serie 3: Growth */}
               <div className="space-y-4 pt-10">
                 <h4 className="text-sm uppercase tracking-wider font-medium" style={{ color: "var(--muted)" }}>Growth</h4>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -309,7 +292,7 @@
             <footer style={{ borderTop: "1px solid var(--border)" }}>
               <div className="mx-auto max-w-6xl px-4 md:px-6 py-8 text-sm" style={{ color: "var(--muted)" }}>
                 <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-                  <span>© ${new Date().getFullYear()} Cashup Card</span>
+                  <span>© {new Date().getFullYear()} Cashup Card</span>
                   <div className="flex items-center gap-4">
                     <a className="hover:underline" href="#">Privacy</a>
                     <a className="hover:underline" href="#">Terms</a>
