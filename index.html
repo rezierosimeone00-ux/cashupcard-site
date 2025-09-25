@@ -27,60 +27,42 @@
 <body class="font-body" style="background:var(--bg-0);color:var(--text)">
   <div id="root"></div>
 
-  <!-- React 18 UMD + Babel per JSX in-browser -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <script type="text/babel">
-    // ========= Config =========
     const LAUNCH_ISO = "2026-08-31T00:00:00-04:00";
+    const CA_POSTAL=/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][\s-]?\d[ABCEGHJ-NPRSTV-Z]\d$/i;
+    const GTA_FSA=/^(M\d|L[01345679])/i;
+    const isGTA=(pc)=>{const s=String(pc||"").trim().toUpperCase();return CA_POSTAL.test(s)&&GTA_FSA.test(s);};
 
-    // Canada postal code + coarse GTA filter
-    const CA_POSTAL = /^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][\s-]?\d[ABCEGHJ-NPRSTV-Z]\d$/i;
-    const GTA_FSA = /^(M\d|L[01345679])/i;
-    const isGTA = (pc) => {
-      const s = String(pc || "").trim().toUpperCase();
-      return CA_POSTAL.test(s) && GTA_FSA.test(s);
-    };
-
-    // ========= Hooks =========
     function useCountdown(target){
       const [now,setNow]=React.useState(()=>new Date());
       React.useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id);},[]);
       const diff=Math.max(0,target.getTime()-now.getTime());
       const t=Math.floor(diff/1000);
-      return {
-        days:Math.floor(t/86400),
-        hours:Math.floor((t%86400)/3600),
-        minutes:Math.floor((t%3600)/60),
-        seconds:t%60,
-      };
+      return {days:Math.floor(t/86400),hours:Math.floor((t%86400)/3600),minutes:Math.floor((t%3600)/60),seconds:t%60};
     }
 
-    // ========= Primitives =========
-    const Button=({className="",children,...p})=>(
-      <button className={"inline-flex items-center justify-center rounded-xl px-4 h-11 text-sm font-medium transition "+className}{...p}>{children}</button>
-    );
+    const Button=({className="",children,...p})=>(<button className={"inline-flex items-center justify-center rounded-xl px-4 h-11 text-sm font-medium transition "+className}{...p}>{children}</button>);
     const Input =({className="",...p})=>(<input className={"w-full rounded-md border px-3 h-11 outline-none "+className}{...p}/>);
     const Label =({htmlFor,children,className="",style})=>(<label htmlFor={htmlFor} className={"text-sm "+className} style={style}>{children}</label>);
     const Checkbox=({id,className="",...p})=>(<input id={id} type="checkbox" className={"h-4 w-4 "+className}{...p}/>);
     const Card   =({className="",style={},children})=>(<div className={"rounded-2xl border "+className} style={style}>{children}</div>);
     const CardContent=({className="",children})=>(<div className={className}>{children}</div>);
 
-    // ========= Atoms =========
     const Field=({id,label,placeholder,type="text",options,value,onChange,onBlur,hint})=>(
       <div className="grid gap-2">
         <Label htmlFor={id} className="font-medium" style={{color:"var(--title)"}}>{label}</Label>
         {options?(
           <select id={id} value={value} onChange={onChange} onBlur={onBlur}
-            className="h-11 rounded-md border px-3 bg-transparent"
-            style={{color:"var(--text)",borderColor:"var(--border)"}}>
+            className="h-11 rounded-md border px-3 bg-transparent" style={{color:"var(--text)",borderColor:"var(--border)"}}>
             {options.map(o=><option key={o} value={o}>{o}</option>)}
           </select>
         ):(
           <Input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} onBlur={onBlur}
-            className="bg-transparent" style={{color:"var(--text)",borderColor:"var(--border)"}}/>
+                 className="bg-transparent" style={{color:"var(--text)",borderColor:"var(--border)"}}/>
         )}
         {hint&&<span className="text-xs" style={{color:"var(--muted)"}}>{hint}</span>}
       </div>
@@ -106,26 +88,21 @@
       </Card>
     );
 
-    // ========= Page =========
     function CashupSite(){
       const targetDate=React.useMemo(()=>new Date(LAUNCH_ISO),[]);
       const {days,hours,minutes,seconds}=useCountdown(targetDate);
-
       const [userZip,setUserZip]=React.useState("");
       const [zipHint,setZipHint]=React.useState("Example: M5H 2N2");
       const [zipOk,setZipOk]=React.useState(null);
-
       const onZipBlur=()=>{
         if(!userZip){setZipOk(null);setZipHint("Example: M5H 2N2");return;}
         const ok=isGTA(userZip); setZipOk(ok);
         setZipHint(ok?"Looks good — GTA detected":"Not in GTA — try again");
       };
-
       const scrollTo=(id)=>{const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:"smooth",block:"start"});};
 
       return (
-        <div className="min-h-screen w-full" >
-          {/* TOPBAR (senza menu destro) */}
+        <div className="min-h-screen w-full">
           <header className="w-full sticky top-0 z-10" style={{borderBottom:"1px solid var(--border)",background:"rgba(19,22,27,0.8)",backdropFilter:"blur(10px)"}}>
             <div className="mx-auto max-w-6xl px-4 md:px-6 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -136,11 +113,10 @@
             </div>
           </header>
 
-          {/* HERO */}
           <section className="mx-auto max-w-6xl px-4 md:px-6 pt-8 pb-6">
             <div className="grid lg:grid-cols-2 gap-8 items-center">
               <div className="space-y-5 text-center lg:text-left">
-                <!-- UNA RIGA SU MOBILE -->
+                {/* UNA RIGA SU MOBILE */}
                 <h1 className="whitespace-nowrap text-[5vw] sm:text-[32px] md:text-5xl font-bold leading-tight font-display" style={{color:"var(--title)",letterSpacing:"-0.01em"}}>
                   Imagine loading $80 and instantly seeing $100.
                 </h1>
@@ -158,7 +134,6 @@
                 </div>
               </div>
 
-              {/* COUNTDOWN: tasselli allineati */}
               <div id="countdown">
                 <Card className="glass" style={{boxShadow:"0 14px 40px rgba(0,0,0,.4)"}}>
                   <CardContent className="p-5 md:p-6">
@@ -176,10 +151,8 @@
             </div>
           </section>
 
-          {/* FORMS: stessa altezza + CTA in basso */}
           <section id="join" className="mx-auto max-w-6xl px-4 md:px-6 py-8" style={{background:"var(--bg-1)"}}>
             <div className="grid md:grid-cols-2 gap-6 items-stretch">
-              {/* USERS */}
               <Card className="glass h-full">
                 <CardContent className="p-6 space-y-4 flex flex-col h-full">
                   <div className="flex items-center gap-2 mb-1">
@@ -198,7 +171,6 @@
                 </CardContent>
               </Card>
 
-              {/* BUSINESS */}
               <Card id="apply" className="glass h-full">
                 <CardContent className="p-6 space-y-4 flex flex-col h-full">
                   <div className="flex items-center gap-2 mb-1">
@@ -220,7 +192,6 @@
             </div>
           </section>
 
-          {/* FEATURES */}
           <section id="how" className="mx-auto max-w-6xl px-4 md:px-6 pb-14" style={{background:"var(--bg-1)"}}>
             <div className="space-y-4 pt-6">
               <h4 className="text-sm uppercase tracking-wider font-medium" style={{color:"var(--muted)"}}>Value</h4>
@@ -245,7 +216,6 @@
             </div>
           </section>
 
-          {/* FOOTER */}
           <footer style={{borderTop:"1px solid var(--border)"}}>
             <div className="mx-auto max-w-6xl px-4 md:px-6 py-7 text-sm" style={{color:"var(--muted)"}}>
               <div className="flex flex-col md:flex-row items-center justify-between gap-3">
