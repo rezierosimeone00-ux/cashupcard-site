@@ -1,253 +1,205 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Cashup Card</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-:root{
-  --bg-0:#13161B; --bg-1:#161B22; --card:#1C222B; --border:#2A313B;
-  --title:#FFFFFF; --text:#E2E6EC; --muted:#9AA5B1;
-  --accent:#00C9A7; --accent-2:#7C8CFF; --accent-bg:linear-gradient(135deg,#00C9A7,#7C8CFF);
-}
-.font-display{font-family:"Space Grotesk",ui-sans-serif,system-ui}
-.font-body{font-family:Inter,ui-sans-serif,system-ui}
-.btn-primary{background:var(--accent-bg);color:#0b0f12;font-weight:600}
-.btn-primary:hover{filter:brightness(1.05)}
-.btn-secondary{border:1px solid var(--accent-2);color:#fff}
-.btn-secondary:hover{background:rgba(124,140,255,.12)}
-.glass{background:rgba(255,255,255,.03);border:1px solid var(--border)}
-@supports(backdrop-filter:blur(8px)){.glass{backdrop-filter:blur(8px)}}
-.timebox{min-height:84px} /* allineamento tasselli counter */
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cashup Card — Instant Uplift Virtual Cards</title>
+  <meta name="description" content="Cashup Card issues instant uplift virtual prepaid cards. Simple, instant, AI-powered.">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.10/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-<div id="root"></div>
-
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-<script type="text/babel">
-const LAUNCH_ISO="2026-08-31T00:00:00-04:00";
-const CA_POSTAL=/^[ABCEGHJ-NPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z][\\s-]?\\d[ABCEGHJ-NPRSTV-Z]\\d$/i;
-const GTA_FSA=/^(M\\d|L[01345679])/i;
-const isGTA=(pc)=>{const s=String(pc||"").trim().toUpperCase();return CA_POSTAL.test(s)&&GTA_FSA.test(s);};
-
-function useCountdown(tg){
-  const [now,setNow]=React.useState(()=>new Date());
-  React.useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id);},[]);
-  const d=Math.max(0,tg.getTime()-now.getTime());
-  const s=Math.floor(d/1000);
-  return {
-    days:Math.floor(s/86400),
-    hours:Math.floor((s%86400)/3600),
-    minutes:Math.floor((s%3600)/60),
-    seconds:s%60
-  };
-}
-
-const Button=({className="",children,...p})=>(<button className={"inline-flex items-center justify-center rounded-xl px-4 h-11 text-sm font-medium transition "+className}{...p}>{children}</button>);
-const Input =({className="",...p})=>(<input className={"w-full rounded-md border px-3 h-11 outline-none "+className}{...p}/>);
-const Label =({htmlFor,children,className="",style})=>(<label htmlFor={htmlFor} className={"text-sm "+className} style={style}>{children}</label>);
-const Checkbox=({id,className="",...p})=>(<input id={id} type="checkbox" className={"h-4 w-4 "+className}{...p}/>);
-const Card   =({className="",style={},children})=>(<div className={"rounded-2xl border "+className} style={style}>{children}</div>);
-const CardContent=({className="",children})=>(<div className={className}>{children}</div>);
-
-const Field=({id,label,placeholder,type="text",options,value,onChange,onBlur,hint})=>(
-  <div className="grid gap-2">
-    <Label htmlFor={id} className="font-medium" style={{color:"var(--title)"}}>{label}</Label>
-    {options?(
-      <select id={id} value={value} onChange={onChange} onBlur={onBlur}
-        className="h-11 rounded-md border px-3 bg-transparent"
-        style={{color:"var(--text)",borderColor:"var(--border)"}}>
-        {options.map(o=><option key={o} value={o}>{o}</option>)}
-      </select>
-    ):(
-      <Input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} onBlur={onBlur}
-        className="bg-transparent" style={{color:"var(--text)",borderColor:"var(--border)"}}/>
-    )}
-    {hint&&<span className="text-xs" style={{color:"var(--muted)"}}>{hint}</span>}
-  </div>
-);
-
-const TimeBox=({label,value})=>(
-  <div className="timebox flex flex-col items-center justify-center rounded-2xl p-4 text-white" style={{background:"var(--accent-bg)"}}>
-    <div className="text-3xl md:text-4xl font-bold tabular-nums leading-none">{String(value).padStart(2,"0")}</div>
-    <div className="text-[11px] uppercase tracking-wider mt-1 opacity-90">{label}</div>
-  </div>
-);
-
-const InfoCard=({title,text,badge,accent="var(--accent)"})=>(
-  <Card className="glass" style={{borderColor:accent,boxShadow:"0 10px 28px rgba(0,0,0,.28)"}}>
-    <CardContent className="p-6 space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{background:accent}}/>
-        <h4 className="text-lg font-semibold font-display" style={{color:"var(--title)",letterSpacing:"-0.01em"}}>{title}</h4>
-      </div>
-      {badge&&<div className="text-[11px] uppercase tracking-wider" style={{color:"var(--muted)"}}>{badge}</div>}
-      <p style={{color:"var(--text)"}}>{text}</p>
-    </CardContent>
-  </Card>
-);
-
-function CashupSite(){
-  const targetDate=React.useMemo(()=>new Date(LAUNCH_ISO),[]);
-  const {days,hours,minutes,seconds}=useCountdown(targetDate);
-
-  const [userZip,setUserZip]=React.useState("");
-  const [zipHint,setZipHint]=React.useState("Example: M5H 2N2");
-  const [zipOk,setZipOk]=React.useState(null);
-
-  const onZipBlur=()=>{
-    if(!userZip){setZipOk(null);setZipHint("Example: M5H 2N2");return;}
-    const ok=isGTA(userZip); setZipOk(ok);
-    setZipHint(ok?"Looks good — GTA detected":"Not in GTA — try again");
-  };
-
-  const scrollTo=(id)=>{const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:"smooth",block:"start"});};
-
-  return (
-    <div className="min-h-screen w-full font-body" style={{background:"var(--bg-0)",color:"var(--text)"}}>
-      {/* NAV: menu destro rimosso */}
-      <header className="w-full sticky top-0 z-10" style={{borderBottom:"1px solid var(--border)",background:"rgba(19,22,27,0.8)",backdropFilter:"blur(10px)"}}>
-        <div className="mx-auto max-w-6xl px-4 md:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl" style={{background:"var(--accent-bg)"}} />
-            <span className="text-lg font-semibold font-display" style={{color:"var(--title)"}}>Cashup Card</span>
-          </div>
-          <div></div>
-        </div>
-      </header>
-
-      {/* HERO: una riga su mobile */}
-      <section className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-6">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6 text-center lg:text-left">
-            <h1 className="font-display font-bold leading-tight whitespace-nowrap text-[5.8vw] sm:text-[32px] md:text-5xl" style={{color:"var(--title)",letterSpacing:"-0.01em"}}>
-              Imagine loading $80 and instantly seeing $100.
-            </h1>
-            <p className="text-[16px] md:text-lg leading-relaxed max-w-[58ch] mx-auto lg:mx-0">
-              Instant-uplift virtual prepaid cards. No coupons. No waiting — <span style={{color:"#fff"}}>real value at checkout</span>, usable immediately.
-            </p>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-              <Button onClick={()=>scrollTo("join")} className="btn-primary">Users – Join the Pilot</Button>
-              <Button onClick={()=>scrollTo("apply")} className="btn-secondary">Business – Apply</Button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center text-sm justify-center lg:justify-start" style={{color:"var(--muted)"}}>
-              <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{background:"var(--accent)"}}/> <span>Launch date fixed: 31 Aug 2026 (America/Toronto)</span></div>
-              <span className="hidden sm:block">•</span>
-              <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{background:"var(--accent-2)"}}/> <span>Limited per Drop in your area</span></div>
-            </div>
-          </div>
-
-          {/* COUNTDOWN: tasselli allineati */}
-          <div id="countdown">
-            <Card className="glass" style={{boxShadow:"0 14px 40px rgba(0,0,0,.4)"}}>
-              <CardContent className="p-6">
-                <p className="uppercase text-xs tracking-wider mb-2" style={{color:"var(--muted)"}}>Launch countdown</p>
-                <div className="grid grid-cols-4 gap-3 text-center items-stretch">
-                  <TimeBox label="Days" value={days}/>
-                  <TimeBox label="Hours" value={hours}/>
-                  <TimeBox label="Minutes" value={minutes}/>
-                  <TimeBox label="Seconds" value={seconds}/>
-                </div>
-                <p className="text-xs mt-3" style={{color:"var(--muted)"}}>Target date: 31 Aug 2026</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* FORMS: stessa altezza + CTA in basso */}
-      <section id="join" className="mx-auto max-w-6xl px-4 md:px-6 py-10" style={{background:"var(--bg-1)"}}>
-        <div className="grid md:grid-cols-2 gap-8 items-stretch">
-          <Card className="glass h-full">
-            <CardContent className="p-6 space-y-4 flex flex-col h-full">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="h-2.5 w-2.5 rounded-full" style={{background:"var(--accent)"}}/>
-                <p className="uppercase text-xs tracking-wider" style={{color:"var(--muted)"}}>Users</p>
-              </div>
-              <h2 className="text-xl font-semibold font-display" style={{color:"var(--title)"}}>Join the Pilot</h2>
-              <Field id="user-email" label="Email" type="email" placeholder="you@example.com"/>
-              <Field id="user-area" label="Area" options={["Toronto","Mississauga","Brampton","Vaughan","Markham","Scarborough","Richmond Hill","Pickering"]}/>
-              <Field id="user-zip" label="Postal Code (GTA only)" placeholder="M5H 2N2"
-                     value={userZip} onChange={e=>setUserZip(e.target.value)} onBlur={onZipBlur}
-                     hint={zipOk===null?zipHint:zipHint}/>
-              <Field id="user-pref" label="Preference" options={["Grocery","Pet","Both"]}/>
-              <div className="flex items-center gap-2"><Checkbox id="user-terms"/><Label htmlFor="user-terms">Accept Terms & Privacy Policy</Label></div>
-              <Button className="btn-primary w-full mt-auto">Welcome aboard 🎉</Button>
-            </CardContent>
-          </Card>
-
-          <Card id="apply" className="glass h-full">
-            <CardContent className="p-6 space-y-4 flex flex-col h-full">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="h-2.5 w-2.5 rounded-full" style={{background:"var(--accent-2)"}}/>
-                <p className="uppercase text-xs tracking-wider" style={{color:"var(--muted)"}}>Business</p>
-              </div>
-              <h2 className="text-xl font-semibold font-display" style={{color:"var(--title)"}}>Apply as a Merchant</h2>
-              <Field id="biz-legal" label="Business legal name" placeholder="Your Legal Name Inc."/>
-              <Field id="biz-cat" label="Category" options={["Grocery","Pet","Both"]}/>
-              <Field id="biz-locs" label="# Stores" options={["1","2–3","4–9","10+"]}/>
-              <Field id="biz-hq" label="Head office city" options={["Toronto","Mississauga","Brampton","Vaughan","Markham","Other (GTA)"]}/>
-              <Field id="biz-site" label="Website or social link" type="url" placeholder="https://..."/>
-              <Field id="biz-email" label="Work email" type="email" placeholder="owner@store.com"/>
-              <Field id="biz-golive" label="Desired go-live timeframe" options={["30 days","60 days","90 days"]}/>
-              <div className="flex items-center gap-2"><Checkbox id="biz-terms"/><Label htmlFor="biz-terms">Accept Terms & Privacy Policy</Label></div>
-              <Button className="btn-secondary w-full mt-auto">Submit • Under review ✅</Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section id="how" className="mx-auto max-w-6xl px-4 md:px-6 pb-16" style={{background:"var(--bg-1)"}}>
-        <div className="space-y-4 pt-8">
-          <h4 className="text-sm uppercase tracking-wider font-medium" style={{color:"var(--muted)"}}>Value</h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <InfoCard title="Instant Uplift Cards" badge="Scarcity per cluster" text="Unlock extra value via geo-segmented Drops or QR at participating locations." accent="var(--accent)"/>
-            <InfoCard title="Real-Time Checkout Value" text="Balance reflects the bonus the moment you pay; spend fractionally within category." accent="var(--accent-2)"/>
-          </div>
-        </div>
-        <div className="space-y-4 pt-10">
-          <h4 className="text-sm uppercase tracking-wider font-medium" style={{color:"var(--muted)"}}>Platform</h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <InfoCard title="AI-Powered Platform" text="Automation engine, fraud detection, live analytics, modular architecture ready to scale." accent="var(--accent-2)"/>
-            <InfoCard title="Merchant Friendly" badge="No upfront ads" text="Commission only on added value; easy API integration; steady, predictable traffic." accent="var(--accent)"/>
-          </div>
-        </div>
-        <div className="space-y-4 pt-10">
-          <h4 className="text-sm uppercase tracking-wider font-medium" style={{color:"var(--muted)"}}>Growth</h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <InfoCard title="Local Growth Engine" text="Every card strengthens participation; value stays local and builds loyalty." accent="var(--accent)"/>
-            <InfoCard title="Future Vision" text="Pilot on essentials first; expand categories/regions with the same AI infrastructure." accent="var(--accent-2)"/>
-          </div>
-        </div>
-      </section>
-
-      <footer style={{borderTop:"1px solid var(--border)"}}>
-        <div className="mx-auto max-w-6xl px-4 md:px-6 py-8 text-sm" style={{color:"var(--muted)"}}>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            <span>© {new Date().getFullYear()} Cashup Card — Build UX-FIX</span>
-            <div className="flex items-center gap-4">
-              <a className="hover:underline" href="#">Privacy</a>
-              <a className="hover:underline" href="#">Terms</a>
-              <a className="hover:underline" href="#">Contact</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+<body class="bg-white text-slate-900 antialiased">
+  <!-- Nav -->
+  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2">
+        <img src="assets/logo.svg" class="h-8 w-auto" alt="Cashup Card logo">
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#countdown" class="hover:text-slate-700">Launch</a>
+        <a href="#testimonials" class="hover:text-slate-700">What people say</a>
+        <a href="#features" class="hover:text-slate-700">How it works</a>
+        <a href="#join" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:opacity-90">Get started</a>
+      </nav>
     </div>
-  );
-}
+  </header>
 
-const root=ReactDOM.createRoot(document.getElementById('root'));
-root.render(<CashupSite/>);
-</script>
+  <!-- 1) HERO -->
+  <section class="hero-gradient border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 py-16 lg:py-24 grid lg:grid-cols-2 gap-10 items-center">
+      <div>
+        <h1 class="text-3xl md:text-5xl font-bold leading-tight">
+          Imagine loading $80 into an app and instantly seeing a balance of $100.
+        </h1>
+        <div class="mt-5 text-lg text-slate-700 space-y-4 max-w-2xl">
+          <p>Cashup Card issues instant uplift virtual prepaid cards.
+          No coupons. No delayed cashback. No empty promises — just real money, available immediately at checkout in your local grocery store or pet shop.</p>
+          <p>Promotions today are outdated. Cashup Card changes the rules.
+          This is the future of financial growth infrastructure: simple, instant, AI-powered. Not just fintech that moves money — Cashup moves people, businesses, and communities forward.</p>
+        </div>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+          <button id="btn-users" class="px-5 py-3 rounded-xl bg-slate-900 text-white hover:opacity-90">Users – Join the Pilot</button>
+          <button id="btn-merchants" class="px-5 py-3 rounded-xl bg-white ring-1 ring-slate-200 hover:bg-slate-50">Merchants – Apply as a Merchant</button>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="aspect-[4/3] w-full rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center mask-fade">
+          <div class="text-center p-6">
+            <div class="mx-auto w-48 h-28 rounded-2xl bg-white border border-slate-200 shadow-sm mb-4"></div>
+            <p class="text-slate-500">Cashup-branded hero illustration placeholder</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2) COUNTDOWN -->
+  <section id="countdown" class="py-16 lg:py-20 border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-10 items-center">
+      <div class="order-2 lg:order-1">
+        <h2 class="text-2xl md:text-4xl font-semibold">The launch is coming.</h2>
+        <div class="mt-4 text-slate-700 space-y-4">
+          <p>Cashup Card goes live on <strong>August 31, 2026</strong>. The countdown is fixed — it never resets. Every visit shows the same official launch date.</p>
+          <p>Be among the first to unlock instant uplift cards when the timer hits zero.</p>
+        </div>
+        <div class="mt-6 flex flex-col sm:flex-row gap-3">
+          <button id="btn-users-2" onclick="document.getElementById('btn-users').click()" class="px-5 py-3 rounded-xl bg-slate-900 text-white hover:opacity-90">Users – Join the Pilot</button>
+          <button id="btn-merchants-2" onclick="document.getElementById('btn-merchants').click()" class="px-5 py-3 rounded-xl bg-white ring-1 ring-slate-200 hover:bg-slate-50">Merchants – Apply as a Merchant</button>
+        </div>
+      </div>
+      <div class="order-1 lg:order-2">
+        <div class="countdown-box grid grid-cols-4 gap-3 text-center">
+          <div class="card rounded-2xl border border-slate-200 p-5">
+            <div id="dd" class="text-4xl md:text-6xl font-bold">00</div>
+            <div class="mt-2 text-xs uppercase tracking-wide text-slate-500">Days</div>
+          </div>
+          <div class="card rounded-2xl border border-slate-200 p-5">
+            <div id="hh" class="text-4xl md:text-6xl font-bold">00</div>
+            <div class="mt-2 text-xs uppercase tracking-wide text-slate-500">Hours</div>
+          </div>
+          <div class="card rounded-2xl border border-slate-200 p-5">
+            <div id="mm" class="text-4xl md:text-6xl font-bold">00</div>
+            <div class="mt-2 text-xs uppercase tracking-wide text-slate-500">Minutes</div>
+          </div>
+          <div class="card rounded-2xl border border-slate-200 p-5">
+            <div id="ss" class="text-4xl md:text-6xl font-bold">00</div>
+            <div class="mt-2 text-xs uppercase tracking-wide text-slate-500">Seconds</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3) TESTIMONIALS -->
+  <section id="testimonials" class="py-16 lg:py-20 border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4">
+      <h3 class="text-2xl md:text-3xl font-semibold">What people are already saying</h3>
+      <div class="mt-8 grid md:grid-cols-3 gap-6">
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“It feels like free money, but real.” — <span class="font-medium">Alex</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“Finally something that rewards me instantly, not weeks later.” — <span class="font-medium">Daniel</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“This could actually help me save on groceries.” — <span class="font-medium">Priya</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“I never trust coupons, but this is different.” — <span class="font-medium">Sofia</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“It’s simple — I don’t have to change how I pay.” — <span class="font-medium">Liam</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“I’d actually switch my usual payment app for this.” — <span class="font-medium">Maria</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“If pet stores accept it, I’m in.” — <span class="font-medium">Kevin</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“It makes my budget feel bigger without extra effort.” — <span class="font-medium">Emma</span></blockquote>
+        <blockquote class="card rounded-2xl border border-slate-200 p-6 text-slate-700">“Way better than collecting points I forget to use.” — <span class="font-medium">Noah</span></blockquote>
+      </div>
+      <div class="sr-only">“Feels like fintech that finally works for me.” — Olivia</div>
+    </div>
+  </section>
+
+  <!-- 4) FEATURES (6 cards) -->
+  <section id="features" class="py-16 lg:py-24 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <h3 class="text-2xl md:text-3xl font-semibold">How Cashup Card works</h3>
+      <div class="mt-8 grid lg:grid-cols-3 gap-6">
+        <div class="card rounded-2xl border border-slate-200 p-6 bg-white">
+          <h4 class="font-semibold text-lg">Instant Uplift Cards</h4>
+          <p class="mt-3 text-slate-700">Each Drop or QR release comes with a limited number of cards per cluster, making access exclusive and time-sensitive.</p>
+          <p class="mt-3 text-slate-700">Join the waitlist to get the app link first. At launch, unlock extra value via geo-segmented Drops or by scanning a QR code at participating locations in your area. After you purchase your card, you’ll receive two in-app value pop-ups automatically — no drop or QR required — so your uplift will be multiplied.</p>
+        </div>
+        <div class="card rounded-2xl border border-slate-200 p-6 bg-white">
+          <h4 class="font-semibold text-lg">Real-Time Checkout Value</h4>
+          <p class="mt-3 text-slate-700">Use your Cashup Card and see the uplift apply instantly at checkout. No waiting for cashback, no chasing coupons — your balance reflects the bonus the moment you pay.</p>
+          <p class="mt-3 text-slate-700">That extra value can also be spent fractionally across multiple merchants in the same category — grocery or pet — turning every purchase into a bigger deal.</p>
+        </div>
+        <div class="card rounded-2xl border border-slate-200 p-6 bg-white">
+          <h4 class="font-semibold text-lg">For Local Businesses</h4>
+          <p class="mt-3 text-slate-700">Drops are capped within each cluster, so stores see steady, manageable foot traffic without the risk of overflow.</p>
+          <p class="mt-3 text-slate-700">Connecting is simple through APIs, while Cashup’s AI does the heavy lifting. Clusters (H3 res 5/6) balance local population with store categories, so users spend nearby and shops gain predictable traffic.</p>
+          <p class="mt-3 text-slate-700">No upfront cost: Cashup covers all expenses until a card is redeemed in-store. At that moment, a small commission applies, tied to the uplift value received by the shopper.</p>
+        </div>
+        <div class="card rounded-2xl border border-slate-200 p-6 bg-white">
+          <h4 class="font-semibold text-lg">AI-Powered Platform</h4>
+          <p class="mt-3 text-slate-700">Cashup blends financial innovation with advanced AI. Virtual cards let users load less and spend more, while businesses onboard with no upfront fees.</p>
+          <p class="mt-3 text-slate-700">AI clusters balance users and merchants for efficient growth. The Advertising Automation Engine fine-tunes campaigns in real time.</p>
+          <p class="mt-3 text-slate-700">Built-in fraud detection keeps transactions safe. Live analytics improve performance, and a modular architecture makes scaling fast. Onboarding takes minutes, redemption takes seconds — Cashup moves quickly from pilot to market.</p>
+        </div>
+        <div class="card rounded-2xl border border-slate-200 p-6 bg-white">
+          <h4 class="font-semibold text-lg">Local Growth Engine</h4>
+          <p class="mt-3 text-slate-700">Cashup builds engagement where it matters most — everyday local shopping. AI-driven clusters connect users directly with nearby stores.</p>
+          <p class="mt-3 text-slate-700">Each card strengthens participation: people access real value, stores grow without risk. By keeping value local, Cashup creates lasting engagement that benefits both communities and commerce.</p>
+        </div>
+        <div class="card rounded-2xl border border-slate-200 p-6 bg-white">
+          <h4 class="font-semibold text-lg">Future Vision</h4>
+          <p class="mt-3 text-slate-700">Cashup Card starts with a pilot focused on essentials, but the platform is designed to scale.</p>
+          <p class="mt-3 text-slate-700">The same AI that links users to local shops can expand nationally and internationally, adapting instantly to new markets and behaviors.</p>
+          <p class="mt-3 text-slate-700">From prepaid cards to full financial services, Cashup is long-term infrastructure — evolving with people, businesses, and communities.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5) CTA RECAP -->
+  <section id="join" class="py-16 lg:py-20">
+    <div class="max-w-7xl mx-auto px-4">
+      <h3 class="text-2xl md:text-3xl font-semibold">Ready to join?</h3>
+      <div class="mt-8 grid md:grid-cols-2 gap-6">
+        <div class="card rounded-2xl border border-slate-200 p-6">
+          <h4 class="font-semibold">For Users</h4>
+          <p class="mt-2 text-slate-700">Availability is limited per area — early access recommended.</p>
+          <button onclick="document.getElementById('btn-users').click()" class="mt-4 px-5 py-3 rounded-xl bg-slate-900 text-white hover:opacity-90">Join the Pilot</button>
+        </div>
+        <div class="card rounded-2xl border border-slate-200 p-6">
+          <h4 class="font-semibold">For Merchants</h4>
+          <p class="mt-2 text-slate-700">No upfront cost. Commission only applies when value is redeemed in-store.</p>
+          <button onclick="document.getElementById('btn-merchants').click()" class="mt-4 px-5 py-3 rounded-xl bg-white ring-1 ring-slate-200 hover:bg-slate-50">Apply as a Merchant</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6) FOOTER -->
+  <footer class="bg-slate-900 text-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6">
+      <div>
+        <img src="assets/logo.svg" class="h-8 w-auto" alt="Cashup Card logo">
+        <p class="mt-4 text-slate-400 text-sm">Cashup Card is a fintech pilot launching in Toronto &amp; GTA.</p>
+      </div>
+      <div class="text-sm">
+        <p class="font-semibold">Legal</p>
+        <ul class="mt-3 space-y-2">
+          <li><a href="#" class="hover:underline">Privacy Policy</a></li>
+          <li><a href="#" class="hover:underline">Terms of Service</a></li>
+          <li><a href="#" class="hover:underline">Contact</a></li>
+        </ul>
+      </div>
+      <div class="text-sm">
+        <p class="font-semibold">Follow</p>
+        <ul class="mt-3 space-y-2">
+          <li><a href="#" class="hover:underline">X</a></li>
+          <li><a href="#" class="hover:underline">Instagram</a></li>
+          <li><a href="#" class="hover:underline">LinkedIn</a></li>
+          <li><a href="#" class="hover:underline">Facebook</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 py-4 text-center text-xs text-slate-400">
+      © Cashup Card. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>

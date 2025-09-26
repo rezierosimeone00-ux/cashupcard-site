@@ -1,0 +1,10 @@
+.hero-gradient{
+  background: radial-gradient(1200px 600px at 80% -10%, rgba(59,130,246,.25), transparent 60%),
+              radial-gradient(900px 450px at -10% 0%, rgba(236,72,153,.18), transparent 60%);
+}
+.mask-fade {
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+.countdown-box { font-variant-numeric: tabular-nums; }
+.card { box-shadow: 0 10px 25px rgba(0,0,0,.06); }
